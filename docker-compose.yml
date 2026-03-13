@@ -35,8 +35,9 @@ services:
       POSTGRES_USER: trader
       POSTGRES_PASSWORD: trader123
       POSTGRES_DB: tradingdb
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:

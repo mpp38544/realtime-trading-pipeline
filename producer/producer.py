@@ -21,10 +21,12 @@ class TradingProducer:
 
 
     async def trade_callback(self, trade):
+        print(trade)
+
         print("Trade Received: ", trade.symbol, trade.price, trade.size, trade.timestamp)
 
 
-        kafka_val = json.dumps({"symbol: ": trade.symbol, "price: ": trade.price, "size: ": trade.size, "timestamp: ": str(trade.timestamp)}).encode("utf-8")
+        kafka_val = json.dumps({"symbol": trade.symbol, "price": trade.price, "size": trade.size, "timestamp": str(trade.timestamp)}).encode("utf-8")
 
         self.kafka_producer.produce(topic="raw-ticks", value=kafka_val)
         self.kafka_producer.flush()

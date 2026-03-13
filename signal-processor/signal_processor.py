@@ -2,7 +2,7 @@ import numpy as np
 from confluent_kafka import Consumer
 from confluent_kafka import Producer
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class KalmanFilter:
@@ -68,7 +68,7 @@ class SignalProcessor:
         self.kF = KalmanFilter()
         self.aS = AvellanedaStoikov()
         
-        self.kafka_consumer = Consumer({"bootstrap.servers" : "localhost:9092", "group.id": "signal-processor", "auto.offset.reset": "earliest"})
+        self.kafka_consumer = Consumer({"bootstrap.servers" : "localhost:9092", "group.id": "signal-processor", "auto.offset.reset": "latest"})
 
         self.kafka_consumer.subscribe(["raw-ticks"])
 
@@ -108,6 +108,9 @@ class SignalProcessor:
         size = tick["size"]
         timestamp = tick["timestamp"]
 
+        if self.kF.x[0][0] == 0.0:
+            self.kF.x = np.array([[price], [0.0]])
+
         obs = np.array([[price]])
 
         state = self.kF.update(obs)
@@ -116,24 +119,30 @@ class SignalProcessor:
 
         sigma = self.calc_vol(fair_price)
 
-        midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        t_left = 1 - (datetime.now() - midnight).total_seconds() / 86400
+        t_left = 1 - (datetime.now(timezone.utc) - midnight).total_seconds() / 86400
 
         bid, ask = self.aS.calculate_quotes(fair_price, sigma, self.inv, t_left)
-
+        
         bid = float(bid)
-        ask = float(ask) 
+        ask = float(ask)
+
 
         signals = []
 
+        print(f"Signal: {symbol} @ {price} | fair: {fair_price:.4f} | bid: {bid:.4f} | ask: {ask:.4f}")
+
+        latency = datetime.now(timezone.utc) - datetime.fromisoformat(timestamp)
+        print(f"Processing latency: {latency.total_seconds()*1000:.2f}ms")
+
         if price <= bid and self.inv < self.aS.max_pos:
-            trade_sig = {"symbol": symbol, "signal": "BUY", "price": price, "val": bid, "fair_price": fair_price, "inventory": self.inv, "timestamp" : timestamp}
+            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": bid, "fair_price": fair_price, "size": size, "inventory": self.inv, "timestamp" : timestamp}
 
             signals.append(trade_sig)
 
         if price >= ask and self.inv > -self.aS.max_pos:
-            trade_sig = {"symbol": symbol, "signal": "SELL", "price": price, "val": ask, "fair_price": fair_price, "inventory": self.inv, "timestamp" : timestamp}
+            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": ask, "fair_price": fair_price, "size": size, "inventory": self.inv, "timestamp" : timestamp}
 
             signals.append(trade_sig)
 
