@@ -3,7 +3,7 @@ from confluent_kafka import Consumer
 from confluent_kafka import Producer
 import json
 from datetime import datetime, timezone
-
+import os
 
 class KalmanFilter:
     def __init__(self):
@@ -68,11 +68,11 @@ class SignalProcessor:
         self.kF = KalmanFilter()
         self.aS = AvellanedaStoikov()
         
-        self.kafka_consumer = Consumer({"bootstrap.servers" : "localhost:9092", "group.id": "signal-processor", "auto.offset.reset": "latest"})
+        self.kafka_consumer = Consumer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"), "group.id": "signal-processor", "auto.offset.reset": "latest"})
 
         self.kafka_consumer.subscribe(["raw-ticks"])
 
-        self.kafka_producer = Producer({"bootstrap.servers" : "localhost:9092"})
+        self.kafka_producer = Producer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")})
 
         self.inv = 0
 
