@@ -7,7 +7,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -18,7 +18,7 @@ def get_trades():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM trades ORDER BY timestamp DESC LIMIT 5"
+        "SELECT * FROM trades ORDER BY timestamp DESC LIMIT 8"
     )
 
     cols = [desc[0] for desc in cursor.description]
@@ -78,17 +78,18 @@ def get_portfolio():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT portfolio_pnl, timestamp FROM pnl ORDER BY timestamp DESC LIMIT 1"
+        "SELECT realised, unrealised, portfolio_pnl, timestamp FROM pnl ORDER BY timestamp DESC LIMIT 1"
     )
 
-    cols = [desc[0] for desc in cursor.description]
     row = cursor.fetchone()
-
-    res =  dict(zip(cols, row))
-
     cursor.close()
     conn.close()
-    return res
+
+    if row is None:
+        return {"realised": 0, "unrealised": 0, "portfolio_pnl": 0, "timestamp": None}
+
+    cols = ["realised", "unrealised", "portfolio_pnl", "timestamp"]
+    return dict(zip(cols, row))
 
 
 @app.get("/health")
@@ -164,4 +165,20 @@ def get_drawdown():
     return [{"timestamp": str(timestamps[i]),
              "drawdown": float(drawdown[i])} for i in range(len(drawdown))]
 
+@app.get("/logs")
+def get_logs():
+    conn = database.dbconn()
+    cursor = conn.cursor()
 
+    cursor.execute(
+        "SELECT * FROM logs ORDER BY timestamp DESC LIMIT 20"
+    )
+
+    cols = [desc[0] for desc in cursor.description]
+    rows = cursor.fetchall()
+
+    res =  [dict(zip(cols, row)) for row in rows]
+
+    cursor.close()
+    conn.close()
+    return res
