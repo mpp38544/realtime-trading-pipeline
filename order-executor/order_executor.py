@@ -1,16 +1,17 @@
 from confluent_kafka import Consumer
 import psycopg2
 import json
+import os
 
 class OrderExecutor:
     def __init__(self):
-        self.kafka_consumer = Consumer({"bootstrap.servers" : "localhost:9092", "group.id": "order-executor", "auto.offset.reset": "latest"})
+        self.kafka_consumer = Consumer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"), "group.id": "order-executor", "auto.offset.reset": "latest"})
 
         self.kafka_consumer.subscribe(["trading-signals"])
 
         self.conn = psycopg2.connect(
-            host="localhost",
-            port=5433,
+            host=os.environ.get("POSTGRES_HOST", "localhost"),
+            port=int(os.environ.get("POSTGRES_PORT", "5433")),
             database="tradingdb",
             user="trader",
             password="trader123"
@@ -62,6 +63,7 @@ class OrderExecutor:
         self.conn.commit()
 
         print(f"{side} {symbol} @ {val:.2f} | inv: {self.inv[symbol]:.4f} | cash: {self.cash_bal[symbol]:.2f} | portfolio PnL: {self.portfolio_pnl:.2f}")
+        print("-----------------------")
 
     def write_trade(self, symbol, side, price, quantity, timestamp):
         self.cursor.execute(
@@ -92,6 +94,7 @@ class OrderExecutor:
 
             if msg.error():
                 print(f"Consumer error: {msg.error()}")
+                print("-----------------------")
                 continue
 
             try:
@@ -100,6 +103,7 @@ class OrderExecutor:
 
             except Exception as e:
                 print(f"Error processing tick: {e}")
+                print("-----------------------")
                 continue
     
 
