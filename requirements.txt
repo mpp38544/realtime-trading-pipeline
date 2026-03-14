@@ -1,0 +1,8 @@
+confluent-kafka
+alpaca-py
+python-dotenv
+pytz
+numpy
+psycopg2-binary
+fastapi
+uvicorn
