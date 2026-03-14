@@ -19,7 +19,7 @@ function DrawdownChart() {
 
 return (  
     <div>
-        <h2>DRAWDOWN</h2>
+        <h2>Drawdown</h2>
         <ResponsiveContainer width="100%" height={300}>
             <LineChart data={drawdown}>
             <CartesianGrid strokeDasharray="3 3" />

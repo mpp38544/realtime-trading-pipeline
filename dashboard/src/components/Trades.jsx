@@ -7,8 +7,12 @@ function Trades() {
 
     useEffect(() => {
         const fetchTrades = async () => {
-            const response = await axios.get("http://localhost:8000/trades")
-            setTrades(response.data)
+            try {
+                const response = await axios.get("http://localhost:8000/trades")
+                setTrades(response.data)
+            } catch (error) {
+                console.error("Fetch error:", error)
+            }
         }
 
         fetchTrades()
@@ -36,7 +40,7 @@ return (
                         <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.side}</td>
                         <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.price}</td>
                         <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.quantity}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.timestamp}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{new Date(trade.timestamp).toLocaleTimeString()}</td>
                     </tr>
                 ))}
             </tbody>

@@ -4,6 +4,9 @@ from confluent_kafka import Producer
 import json
 from datetime import datetime, timezone
 import os
+import psycopg2
+import sys
+from prometheus_client import Counter, Gauge, start_http_server
 
 class KalmanFilter:
     def __init__(self):
@@ -41,7 +44,7 @@ class AvellanedaStoikov:
     def __init__(self):
         self.gamma = 0.1
         self.kappa = 1.5
-        self.max_pos = 0.01
+        self.max_pos = 0.05
         self.order_size = 0.001
 
     def calculate_quotes(self, fair_price, sigma, inv, t_left):
@@ -64,6 +67,12 @@ class AvellanedaStoikov:
         return [bid, ask]
 
 class SignalProcessor:
+    ticks_processed = Counter('ticks_processed_total', 'Total ticks processed')
+
+    signals_generated = Counter('signals_generated_total', 'Total signals generated')
+
+    processing_latency = Gauge('processing_latency_ms', 'Processing Latency (ms)')
+
     def __init__(self):
         self.kF = {}
         self.aS = {}
@@ -80,6 +89,18 @@ class SignalProcessor:
 
         self.lastPrice = {}
         self.currentVol = {}
+
+        self.conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "localhost"),
+            port=int(os.environ.get("POSTGRES_PORT", "5433")),
+            database="tradingdb",
+            user="trader",
+            password="trader123"
+        )
+
+        self.cursor = self.conn.cursor()
+
+        start_http_server(8002)
 
     def calc_vol(self, symbol, price):
         if self.lastPrice[symbol] <= 0.0:
@@ -141,23 +162,41 @@ class SignalProcessor:
         print(f"Signal: {symbol} @ {price} | fair: {fair_price:.4f} | bid: {bid:.4f} | ask: {ask:.4f}")
 
         latency = datetime.now(timezone.utc) - datetime.fromisoformat(timestamp)
+
+        self.processing_latency.set(latency.total_seconds() * 1000)
+        self.ticks_processed.inc()
+
         print(f"Processing latency: {latency.total_seconds()*1000:.2f}ms")
         print("-----------------------")
 
         if price <= bid and self.inv[symbol] < self.aS[symbol].max_pos:
             trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": bid, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
+            self.write_log(symbol, "BUY", bid, size)
+
             signals.append(trade_sig)
 
         if price >= ask and self.inv[symbol] > -self.aS[symbol].max_pos:
             trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": ask, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
+            self.write_log(symbol, "SELL", ask, size)
+
             signals.append(trade_sig)
 
         for sig in signals:
             self.kafka_producer.produce(topic="trading-signals", value=json.dumps(sig).encode("utf-8"))
+            self.signals_generated.inc()
+        
         
         self.kafka_producer.flush()
+
+    def write_log(self, symbol, side, quote, qty):
+        self.cursor.execute(
+            "INSERT INTO logs (service, message, timestamp) VALUES (%s, %s, %s)",
+            ("processor", f"Submitted {side} order: {symbol} @ ${quote}, Qty: {qty}", datetime.now(timezone.utc))
+        )
+
+        self.conn.commit()
 
     def run(self):
         while True:

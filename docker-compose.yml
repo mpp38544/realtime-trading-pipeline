@@ -68,22 +68,34 @@ services:
     container_name: producer
     depends_on:
       - kafka
+      - postgres
     environment:
+      PYTHONUNBUFFERED: 1
       ALPACA_API_KEY: ${ALPACA_API_KEY}
       ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
     networks:
       - trading-network
+    ports:
+      - "8001:8001"
 
   signal-processor:
     build: ./signal-processor
     container_name: signal-processor
     depends_on:
       - kafka
+      - postgres
     environment:
+      PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
     networks:
       - trading-network
+    ports:
+      - "8002:8002"
 
   order-executor:
     build: ./order-executor
@@ -92,11 +104,14 @@ services:
       - kafka
       - postgres
     environment:
+      PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
     networks:
       - trading-network
+    ports:
+      - "8003:8003"
 
 networks:
   trading-network:

@@ -8,8 +8,12 @@ function PnLChart() {
 
     useEffect(() => {
         const fetchPnl = async () => {
-            const response = await axios.get("http://localhost:8000/pnl")
-            setPnl(response.data)
+            try {
+                const response = await axios.get("http://localhost:8000/pnl")
+                setPnl(response.data)
+            } catch (error) {
+                console.error("Fetch error:", error)
+            }
         }
 
         fetchPnl()
@@ -19,7 +23,7 @@ function PnLChart() {
 
 return (
     <div>
-        <h2>PNL</h2>
+        <h2>PnL</h2>
         <ResponsiveContainer width="100%" height={300}>
             <LineChart width={800} height={300} data={pnl}>
             <CartesianGrid strokeDasharray="3 3" />

@@ -6,8 +6,12 @@ function Header() {
 
     useEffect(() => {
         const fetchPortfolio = async () => {
-            const response = await axios.get("http://localhost:8000/portfolio")
-            setPortfolio(response.data)
+            try {
+                const response = await axios.get("http://localhost:8000/portfolio")
+                setPortfolio(response.data)
+            } catch (error) {
+                console.error("Fetch error:", error)
+            }
         }
 
         fetchPortfolio()
@@ -18,7 +22,9 @@ function Header() {
     return (
         <div>
             <h1><strong>Trading Dashboard</strong></h1>
-            <h2 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${portfolio ? portfolio.portfolio_pnl.toFixed(2) : "Loading..."}</h2>
+            <h3 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${portfolio ? portfolio.portfolio_pnl.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${portfolio ? portfolio.unrealised.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${portfolio ? portfolio.realised.toFixed(2) : "Loading..."}</h3>
         </div>
     )
 }

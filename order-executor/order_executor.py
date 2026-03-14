@@ -2,8 +2,14 @@ from confluent_kafka import Consumer
 import psycopg2
 import json
 import os
+from datetime import datetime, timezone
+from prometheus_client import Counter, Gauge, start_http_server
 
 class OrderExecutor:
+    orders_executed = Counter('orders_executed_total', 'Total orders executed')
+
+    portfolio_pnl_gauge = Gauge('portfolio_pnl_gauge', 'Portfolio PnL')
+
     def __init__(self):
         self.kafka_consumer = Consumer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"), "group.id": "order-executor", "auto.offset.reset": "latest"})
 
@@ -26,6 +32,8 @@ class OrderExecutor:
         self.unrealised_pnl = {}
 
         self.portfolio_pnl = 0
+
+        start_http_server(8003)
 
     
     def execute_signal(self, sig):
@@ -56,9 +64,13 @@ class OrderExecutor:
 
         self.portfolio_pnl = sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
 
+        self.portfolio_pnl_gauge.set(self.portfolio_pnl)
+
         self.write_trade(symbol, side, price, size, timestamp)
         self.write_position(symbol, self.inv[symbol], self.cash_bal[symbol], timestamp)
         self.write_pnl(symbol, self.unrealised_pnl[symbol], self.realised_pnl[symbol], self.realised_pnl[symbol] + self.unrealised_pnl[symbol], self.portfolio_pnl, timestamp)
+        self.write_log(side, symbol, val, size)
+        self.orders_executed.inc()
 
         self.conn.commit()
 
@@ -83,6 +95,12 @@ class OrderExecutor:
             "INSERT INTO pnl (symbol, unrealised, realised, total, portfolio_pnl, timestamp) VALUES (%s, %s, %s, %s, %s, %s)",
 
             (symbol, unrealised, realised, total, portfolio_pnl, timestamp)
+        )
+    
+    def write_log(self, side, symbol, quote, qty):
+        self.cursor.execute(
+            "INSERT INTO logs (service, message, timestamp) VALUES (%s, %s, %s)",
+            ("executor", f"Executed {side} order: {symbol} @ ${quote}, Qty: {qty}", datetime.now(timezone.utc))
         )
 
     def run(self):

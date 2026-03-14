@@ -6,8 +6,12 @@ function Metrics() {
 
     useEffect(() => {
         const fetchMetrics = async () => {
-            const response = await axios.get("http://localhost:8000/metrics")
-            setMetrics(response.data)
+            try {
+                const response = await axios.get("http://localhost:8000/metrics")
+                setMetrics(response.data)
+            } catch (error) {
+                console.error("Fetch error:", error)
+            }
         }
 
         fetchMetrics()
@@ -17,9 +21,9 @@ function Metrics() {
 
     return (
         <div>
-            <h1>Metrics</h1>
-            <h2 style={{ fontWeight: 'normal' }}>Sharpe Ratio: {metrics ? metrics.sharpe_ratio ?? "Calculating..." : "Loading..."}</h2>
-            <h2 style={{ fontWeight: 'normal' }}>Max Drawdown: {metrics ? (metrics.max_drawdown * 100).toFixed(2)  + "%" ?? "Calculating..." : "Loading..."}</h2>
+            <h2>Metrics</h2>
+            <h3 style={{ fontWeight: 'normal' }}>Sharpe Ratio: {metrics ? metrics.sharpe_ratio ?? "Calculating..." : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Max Drawdown: {metrics ? (metrics.max_drawdown * 100).toFixed(2)  + "%" ?? "Calculating..." : "Loading..."}</h3>
         </div>
     )
 }

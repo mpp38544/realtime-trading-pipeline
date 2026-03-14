@@ -7,8 +7,12 @@ function Positions() {
 
     useEffect(() => {
         const fetchPositions = async () => {
-            const response = await axios.get("http://localhost:8000/positions")
-            setPositions(response.data)
+            try {
+                const response = await axios.get("http://localhost:8000/positions")
+                setPositions(response.data)
+            } catch (error) {
+                console.error("Fetch error:", error)
+            }
         }
 
         fetchPositions()

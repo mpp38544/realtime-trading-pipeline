@@ -1,3 +1,5 @@
 confluent-kafka
 numpy
 python-dotenv
+psycopg2-binary
+prometheus_client
