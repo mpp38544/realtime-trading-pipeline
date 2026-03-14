@@ -15,16 +15,14 @@ class TradingProducer:
 
         self.data_stream = CryptoDataStream(api_key = self.ALPACA_API_KEY, secret_key=self.ALPACA_SECRET_KEY)
 
-        self.symbols = ["BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD"]
+        self.symbols = ["BTC/USD", "ETH/USD", "XRP/USD", "AVAX/USD", "LINK/USD"]
 
-        self.kafka_producer = Producer({"bootstrap.servers" : "localhost:9092"})
+        self.kafka_producer = Producer({"bootstrap.servers" : os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")})
 
 
     async def trade_callback(self, trade):
-        print(trade)
-
         print("Trade Received: ", trade.symbol, trade.price, trade.size, trade.timestamp)
-
+        print("-----------------------")
 
         kafka_val = json.dumps({"symbol": trade.symbol, "price": trade.price, "size": trade.size, "timestamp": str(trade.timestamp)}).encode("utf-8")
 

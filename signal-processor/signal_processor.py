@@ -65,8 +65,8 @@ class AvellanedaStoikov:
 
 class SignalProcessor:
     def __init__(self):
-        self.kF = KalmanFilter()
-        self.aS = AvellanedaStoikov()
+        self.kF = {}
+        self.aS = {}
         
         self.kafka_consumer = Consumer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"), "group.id": "signal-processor", "auto.offset.reset": "latest"})
 
@@ -74,26 +74,25 @@ class SignalProcessor:
 
         self.kafka_producer = Producer({"bootstrap.servers": os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")})
 
-        self.inv = 0
+        self.inv = {}
 
         self.decay = 0.94
 
-        self.lastPrice = 0.0
-        self.currentVol = 1e-4
+        self.lastPrice = {}
+        self.currentVol = {}
 
-
-    def calc_vol(self, price):
-        if self.lastPrice <= 0.0:
-            self.lastPrice = price
-            return np.sqrt(self.currentVol)
+    def calc_vol(self, symbol, price):
+        if self.lastPrice[symbol] <= 0.0:
+            self.lastPrice[symbol] = price
+            return np.sqrt(self.currentVol[symbol])
         
-        logReturn = np.log(price / self.lastPrice)
+        logReturn = np.log(price / self.lastPrice[symbol])
 
-        self.currentVol = (self.decay * self.currentVol) + ((1.0 - self.decay) * (logReturn ** 2))
+        self.currentVol[symbol] = (self.decay * self.currentVol[symbol]) + ((1.0 - self.decay) * (logReturn ** 2))
 
-        self.lastPrice = price
+        self.lastPrice[symbol] = price
 
-        return np.sqrt(self.currentVol)
+        return np.sqrt(self.currentVol[symbol])
 
     def process_tick(self, tick):
         '''{
@@ -105,29 +104,37 @@ class SignalProcessor:
 
         symbol = tick["symbol"]
         price = tick["price"]
-        size = tick["size"]
         timestamp = tick["timestamp"]
 
-        if self.kF.x[0][0] == 0.0:
-            self.kF.x = np.array([[price], [0.0]])
+        if symbol not in self.kF:
+            self.kF[symbol] = KalmanFilter()
+            self.aS[symbol] = AvellanedaStoikov()
+
+            self.inv[symbol] = 0.0
+            self.lastPrice[symbol] = 0.0
+            self.currentVol[symbol] = 1e-4
+
+        size = self.aS[symbol].order_size
+
+        if self.kF[symbol].x[0][0] == 0.0:
+            self.kF[symbol].x = np.array([[price], [0.0]])
 
         obs = np.array([[price]])
 
-        state = self.kF.update(obs)
+        state = self.kF[symbol].update(obs)
 
         fair_price = float(state[0][0])
 
-        sigma = self.calc_vol(fair_price)
+        sigma = self.calc_vol(symbol, fair_price)
 
         midnight = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
         t_left = 1 - (datetime.now(timezone.utc) - midnight).total_seconds() / 86400
 
-        bid, ask = self.aS.calculate_quotes(fair_price, sigma, self.inv, t_left)
+        bid, ask = self.aS[symbol].calculate_quotes(fair_price, sigma, self.inv[symbol], t_left)
         
         bid = float(bid)
         ask = float(ask)
-
 
         signals = []
 
@@ -135,14 +142,15 @@ class SignalProcessor:
 
         latency = datetime.now(timezone.utc) - datetime.fromisoformat(timestamp)
         print(f"Processing latency: {latency.total_seconds()*1000:.2f}ms")
+        print("-----------------------")
 
-        if price <= bid and self.inv < self.aS.max_pos:
-            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": bid, "fair_price": fair_price, "size": size, "inventory": self.inv, "timestamp" : timestamp}
+        if price <= bid and self.inv[symbol] < self.aS[symbol].max_pos:
+            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": bid, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
             signals.append(trade_sig)
 
-        if price >= ask and self.inv > -self.aS.max_pos:
-            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": ask, "fair_price": fair_price, "size": size, "inventory": self.inv, "timestamp" : timestamp}
+        if price >= ask and self.inv[symbol] > -self.aS[symbol].max_pos:
+            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": ask, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
             signals.append(trade_sig)
 
@@ -160,10 +168,12 @@ class SignalProcessor:
 
             if msg.error():
                 print(f"Consumer error: {msg.error()}")
+                print("-----------------------")
                 continue
 
             try:
                 tick = json.loads(msg.value().decode("utf-8"))
+                print("-----------------------")
                 self.process_tick(tick)
 
             except Exception as e:

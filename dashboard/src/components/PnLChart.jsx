@@ -1,0 +1,36 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+
+function PnLChart() {
+
+    const [pnl, setPnl] = useState([])
+
+    useEffect(() => {
+        const fetchPnl = async () => {
+            const response = await axios.get("http://localhost:8000/pnl")
+            setPnl(response.data)
+        }
+
+        fetchPnl()
+        const interval = setInterval(fetchPnl, 5000)
+        return () => clearInterval(interval)
+    }, [])
+
+return (
+    <div>
+        <h2>PNL</h2>
+        <ResponsiveContainer width="100%" height={300}>
+            <LineChart width={800} height={300} data={pnl}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="timestamp" tickFormatter={(t) => new Date(t).toLocaleTimeString()} />
+            <YAxis />
+            <Tooltip />
+            <Line type="monotone" dataKey="portfolio_pnl" stroke="#00ff88" dot={false} />
+        </LineChart>
+        </ResponsiveContainer>
+    </div>
+)
+}
+
+export default PnLChart

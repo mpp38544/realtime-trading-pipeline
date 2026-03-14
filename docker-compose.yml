@@ -63,6 +63,41 @@ services:
     networks:
       - trading-network
 
+  producer:
+    build: ./producer
+    container_name: producer
+    depends_on:
+      - kafka
+    environment:
+      ALPACA_API_KEY: ${ALPACA_API_KEY}
+      ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    networks:
+      - trading-network
+
+  signal-processor:
+    build: ./signal-processor
+    container_name: signal-processor
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    networks:
+      - trading-network
+
+  order-executor:
+    build: ./order-executor
+    container_name: order-executor
+    depends_on:
+      - kafka
+      - postgres
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    networks:
+      - trading-network
+
 networks:
   trading-network:
     driver: bridge

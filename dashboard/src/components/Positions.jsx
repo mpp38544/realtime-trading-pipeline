@@ -1,0 +1,46 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+function Positions() {
+
+    const [positions, setPositions] = useState([])
+
+    useEffect(() => {
+        const fetchPositions = async () => {
+            const response = await axios.get("http://localhost:8000/positions")
+            setPositions(response.data)
+        }
+
+        fetchPositions()
+        const interval = setInterval(fetchPositions, 5000)
+        return () => clearInterval(interval)
+    }, [])
+
+return (
+    <div>
+        <h2>Current Positions</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+                <tr>
+                    <th style={{ padding: '8px', borderBottom: '1px solid #333' }}>Symbol</th>
+                    <th style={{ padding: '8px', borderBottom: '1px solid #333' }}>Inventory</th>
+                    <th style={{ padding: '8px', borderBottom: '1px solid #333' }}>Cash Balance</th>
+                    <th style={{ padding: '8px', borderBottom: '1px solid #333' }}>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {positions.map((position, index) => (
+                    <tr key={index}>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.symbol}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.inventory}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.cash_balance}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.timestamp}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+)
+}
+
+export default Positions
