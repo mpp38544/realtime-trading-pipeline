@@ -2,3 +2,5 @@ confluent-kafka
 alpaca-py
 python-dotenv
 pytz
+psycopg2-binary
+prometheus_client
