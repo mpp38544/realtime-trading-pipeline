@@ -60,7 +60,7 @@ def get_pnl():
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM pnl WHERE timestamp > NOW() - INTERVAL '24 hours' ORDER BY timestamp ASC LIMIT 100"
+        "SELECT * FROM pnl WHERE timestamp > NOW() - INTERVAL '1000 hours' ORDER BY timestamp ASC"
     )
 
     cols = [desc[0] for desc in cursor.description]
