@@ -67,10 +67,16 @@ function App() {
             <Positions />
           </div>
 
+          {isMobile && (
+            <div style={{ marginTop: '20px' }}>
+                <ActivityFeed />
+            </div>
+          )}
+
         </div>
 
         {/* Right sidebar */}
-        {isMobile && (
+        {!isMobile && (
           <div style={{ 
             width: '400px', 
             flexShrink: 0,
@@ -86,7 +92,7 @@ function App() {
           <ActivityFeed />
         </div>
         )}
-        
+
       </div>
 
     </div>
