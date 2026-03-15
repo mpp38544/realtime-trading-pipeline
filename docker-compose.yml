@@ -64,6 +64,7 @@ services:
       - trading-network
 
   producer:
+    restart: always
     build: ./producer
     container_name: producer
     depends_on:
@@ -82,6 +83,7 @@ services:
       - "8001:8001"
 
   signal-processor:
+    restart: always
     build: ./signal-processor
     container_name: signal-processor
     depends_on:
@@ -98,6 +100,7 @@ services:
       - "8002:8002"
 
   order-executor:
+    restart: always
     build: ./order-executor
     container_name: order-executor
     depends_on:
