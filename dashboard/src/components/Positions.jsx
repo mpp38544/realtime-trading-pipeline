@@ -8,7 +8,7 @@ function Positions() {
     useEffect(() => {
         const fetchPositions = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/positions")
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/positions`)
                 setPositions(response.data)
             } catch (error) {
                 console.error("Fetch error:", error)

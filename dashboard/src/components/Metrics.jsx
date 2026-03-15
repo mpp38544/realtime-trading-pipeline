@@ -7,7 +7,7 @@ function Metrics() {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/metrics")
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/metrics`)
                 setMetrics(response.data)
             } catch (error) {
                 console.error("Fetch error:", error)

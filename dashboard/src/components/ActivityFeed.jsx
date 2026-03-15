@@ -7,7 +7,7 @@ function ActivityFeed() {
 
     useEffect(() => {
         const fetchLog = async () => {
-            const response = await axios.get("http://localhost:8000/logs")
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/logs`)
             setLog(response.data)
         }
 

@@ -8,7 +8,7 @@ function Trades() {
     useEffect(() => {
         const fetchTrades = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/trades")
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/trades`)
                 setTrades(response.data)
             } catch (error) {
                 console.error("Fetch error:", error)

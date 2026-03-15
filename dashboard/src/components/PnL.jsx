@@ -7,7 +7,7 @@ function PnL() {
     useEffect(() => {
         const fetchPortfolio = async () => {
             try {
-                const response = await axios.get("http://localhost:8000/portfolio")
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/portfolio`)
                 setPortfolio(response.data)
             } catch (error) {
                 console.error("Fetch error:", error)
