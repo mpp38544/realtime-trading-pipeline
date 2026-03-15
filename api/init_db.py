@@ -48,6 +48,18 @@ cursor.execute(
     "timestamp TIMESTAMPTZ)"
 )
 
+cursor.execute(
+    "CREATE TABLE IF NOT EXISTS state (" \
+    "id SERIAL PRIMARY KEY," \
+    "symbol VARCHAR(20) UNIQUE," \
+    "inventory FLOAT," \
+    "cash_balance FLOAT," \
+    "unrealised FLOAT," \
+    "realised FLOAT," \
+    "portfolio_pnl FLOAT," \
+    "timestamp TIMESTAMPTZ)"
+)
+
 connection.commit()
 
 cursor.close()

@@ -1,4 +1,4 @@
-import Header from './components/Header'
+import PnL from './components/PnL'
 import PnlChart from './components/PnLChart'
 import Positions from './components/Positions'
 import Trades from './components/Trades'
@@ -20,10 +20,17 @@ function App() {
 
       <div style={{ display: 'flex', gap: '20px', overflowY: 'hidden' }}>
         <div style={{ flex: 1 }}>
-          <Header />
+          <h1 style={{marginTop: '30px'}}><strong>Trading Dashboard (Avellaneda-Stoikov Model)</strong></h1>
         </div>
-        <div style={{ flex: 1 }}>
-          <Metrics />
+        <div style={{ flex: 1, marginTop: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px'}}>
+              <div style={{ flex: 1}}>
+                <Metrics />
+              </div>
+              <div style={{ flex: 1}}>
+                <PnL />
+              </div>
+            </div>
         </div>
       </div>
 

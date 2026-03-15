@@ -42,7 +42,7 @@ class TradingProducer:
     def write_log(self, symbol, price, qty):
         self.cursor.execute(
             "INSERT INTO logs (service, message, timestamp) VALUES (%s, %s, %s)",
-            ("producer", f"Trade Received: {symbol} @ ${price}, Qty: {qty}", datetime.now(timezone.utc))
+            ("producer", f"Trade Received from Alpaca: {symbol} @ ${price}, Qty: {qty}", datetime.now(timezone.utc))
         )
 
         self.conn.commit()

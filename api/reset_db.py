@@ -1,5 +1,6 @@
 import psycopg2
 
+print("Connecting...")
 connection = psycopg2.connect(
     host="localhost",
     port=5433,
@@ -7,17 +8,22 @@ connection = psycopg2.connect(
     user="trader",
     password="trader123"
 )
+print("Connected")
 
 cursor = connection.cursor()
-
-cursor.execute(
-    "TRUNCATE trades CASCADE;" \
-    "TRUNCATE positions CASCADE;" \
-    "TRUNCATE pnl CASCADE;" \
-    "TRUNCATE logs CASCADE;"
-)
-
+print("Truncating trades...")
+cursor.execute("TRUNCATE TABLE trades CASCADE")
+print("Truncating positions...")
+cursor.execute("TRUNCATE TABLE positions CASCADE")
+print("Truncating pnl...")
+cursor.execute("TRUNCATE TABLE pnl CASCADE")
+print("Truncating logs...")
+cursor.execute("TRUNCATE TABLE logs CASCADE")
+print("Truncating state...")
+cursor.execute("TRUNCATE TABLE state CASCADE")
+print("Committing...")
 connection.commit()
+print("Done")
 
 cursor.close()
 connection.close()

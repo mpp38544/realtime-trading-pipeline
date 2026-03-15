@@ -36,11 +36,11 @@ return (
             <tbody>
                 {trades.map((trade, index) => (
                     <tr key={index}>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.symbol}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.side}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.price}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{trade.quantity}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{new Date(trade.timestamp).toLocaleTimeString()}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{trade.symbol}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{trade.side}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{trade.price}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{trade.quantity}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{new Date(trade.timestamp).toLocaleTimeString()}</td>
                     </tr>
                 ))}
             </tbody>

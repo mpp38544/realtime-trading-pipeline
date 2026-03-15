@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-function Header() {
+function PnL() {
     const [portfolio, setPortfolio] = useState(null)
 
     useEffect(() => {
@@ -21,7 +21,6 @@ function Header() {
 
     return (
         <div>
-            <h1><strong>Trading Dashboard</strong></h1>
             <h3 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${portfolio ? portfolio.portfolio_pnl.toFixed(2) : "Loading..."}</h3>
             <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${portfolio ? portfolio.unrealised.toFixed(2) : "Loading..."}</h3>
             <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${portfolio ? portfolio.realised.toFixed(2) : "Loading..."}</h3>
@@ -29,4 +28,4 @@ function Header() {
     )
 }
 
-export default Header
+export default PnL

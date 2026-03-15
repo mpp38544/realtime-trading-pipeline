@@ -35,10 +35,10 @@ return (
             <tbody>
                 {positions.map((position, index) => (
                     <tr key={index}>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.symbol}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.inventory}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.cash_balance}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #333' }}>{position.timestamp}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{position.symbol}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{position.inventory.toFixed(6)}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{position.cash_balance}</td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #333', textAlign: 'center' }}>{position.timestamp}</td>
                     </tr>
                 ))}
             </tbody>

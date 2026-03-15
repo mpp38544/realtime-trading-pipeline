@@ -23,18 +23,38 @@ class OrderExecutor:
             password="trader123"
         )
 
-        self.cursor = self.conn.cursor()
-
         self.inv = {}
         self.cash_bal = {}
 
         self.realised_pnl = {}
         self.unrealised_pnl = {}
 
+        self.starting_cash = 10000.0
         self.portfolio_pnl = 0
 
+        self.cursor = self.conn.cursor()
+        self.load_state()
         start_http_server(8003)
 
+    def load_state(self):
+        self.cursor.execute(
+            "SELECT symbol, inventory, cash_balance, realised, unrealised, portfolio_pnl FROM state"
+        )
+
+        rows = self.cursor.fetchall()
+
+        if not rows: 
+            return
+        
+        for row in rows:
+            symbol = row[0]
+            self.inv[symbol] = row[1]
+            self.cash_bal[symbol] = row[2]
+            self.realised_pnl[symbol] = row[3]
+            self.unrealised_pnl[symbol] = row[4]
+            self.portfolio_pnl = row[5]
+
+        print(f"Loaded state for {len(rows)} symbols")
     
     def execute_signal(self, sig):
 
@@ -47,7 +67,7 @@ class OrderExecutor:
 
         if symbol not in self.inv:
             self.inv[symbol] = 0.0
-            self.cash_bal[symbol] = 10000.0
+            self.cash_bal[symbol] = 0.0
             self.realised_pnl[symbol] = 0.0
             self.unrealised_pnl[symbol] = 0.0
 
@@ -62,7 +82,7 @@ class OrderExecutor:
         self.unrealised_pnl[symbol] = self.inv[symbol] * price
         self.realised_pnl[symbol] = self.cash_bal[symbol]
 
-        self.portfolio_pnl = sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
+        self.portfolio_pnl = self.starting_cash + sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
 
         self.portfolio_pnl_gauge.set(self.portfolio_pnl)
 
@@ -71,6 +91,7 @@ class OrderExecutor:
         self.write_pnl(symbol, self.unrealised_pnl[symbol], self.realised_pnl[symbol], self.realised_pnl[symbol] + self.unrealised_pnl[symbol], self.portfolio_pnl, timestamp)
         self.write_log(side, symbol, val, size)
         self.orders_executed.inc()
+        self.write_state(symbol, self.inv[symbol], self.cash_bal[symbol], self.realised_pnl[symbol], self.unrealised_pnl[symbol], self.portfolio_pnl)
 
         self.conn.commit()
 
@@ -101,6 +122,19 @@ class OrderExecutor:
         self.cursor.execute(
             "INSERT INTO logs (service, message, timestamp) VALUES (%s, %s, %s)",
             ("executor", f"Executed {side} order: {symbol} @ ${quote}, Qty: {qty}", datetime.now(timezone.utc))
+        )
+
+    def write_state(self, symbol, inventory, cash_bal, realised, unrealised, portfolio):
+        self.cursor.execute("""
+            INSERT INTO state (symbol, inventory, cash_balance, realised, unrealised, portfolio_pnl, timestamp) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (symbol) DO UPDATE set
+                inventory = EXCLUDED.inventory,
+                cash_balance = EXCLUDED.cash_balance,
+                realised = EXCLUDED.realised,
+                unrealised = EXCLUDED.unrealised,
+                portfolio_pnl = EXCLUDED.portfolio_pnl,
+                timestamp = EXCLUDED.timestamp""",
+            (symbol, inventory, cash_bal, realised, unrealised, portfolio, datetime.now(timezone.utc))
         )
 
     def run(self):
