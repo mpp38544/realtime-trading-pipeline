@@ -193,4 +193,4 @@ The React dashboard polls all endpoints every 5 seconds and renders:
 - **Trades Feed** — most recent 5 trade executions
 
 ## Dashboard
-![Dashboard Screenshot](assets/dashboaord.png)
+![Dashboard Screenshot](assets/dashboard.png)
