@@ -19,7 +19,7 @@ function ActivityFeed() {
     const serviceColor = (service) => {
         if (service === 'producer') return '#1d6e3c'
         if (service === 'processor') return 'rgb(52, 155, 86)'
-        if (service === 'executor') return 'rgb(134, 243, 167), 155, 86)'
+        if (service === 'executor') return 'rgb(62, 192, 112)'
         return 'white'
     }
 
