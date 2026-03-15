@@ -42,9 +42,9 @@ class KalmanFilter:
 
 class AvellanedaStoikov:
     def __init__(self):
-        self.gamma = 0.1
+        self.gamma = 0.3
         self.kappa = 1.5
-        self.max_pos = 0.05
+        self.max_pos = 0.01
         self.order_size = 0.001
 
     def calculate_quotes(self, fair_price, sigma, inv, t_left):
@@ -169,6 +169,7 @@ class SignalProcessor:
         print(f"Processing latency: {latency.total_seconds()*1000:.2f}ms")
         print("-----------------------")
 
+        #BUY
         if price <= bid and self.inv[symbol] < self.aS[symbol].max_pos:
             trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": bid, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
@@ -176,6 +177,12 @@ class SignalProcessor:
 
             signals.append(trade_sig)
 
+        elif self.inv[symbol] < -self.aS[symbol].max_pos * 0.8:
+            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": price, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
+            
+            signals.append(trade_sig)
+
+        #SELL
         if price >= ask and self.inv[symbol] > -self.aS[symbol].max_pos:
             trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": ask, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
 
@@ -183,10 +190,14 @@ class SignalProcessor:
 
             signals.append(trade_sig)
 
+        elif self.inv[symbol] > self.aS[symbol].max_pos * 0.8:
+            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": price, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
+
+            signals.append(trade_sig)
+        
         for sig in signals:
             self.kafka_producer.produce(topic="trading-signals", value=json.dumps(sig).encode("utf-8"))
             self.signals_generated.inc()
-        
         
         self.kafka_producer.flush()
 
