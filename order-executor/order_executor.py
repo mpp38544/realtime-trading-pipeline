@@ -82,7 +82,7 @@ class OrderExecutor:
         self.unrealised_pnl[symbol] = self.inv[symbol] * price
         self.realised_pnl[symbol] = self.cash_bal[symbol]
 
-        self.portfolio_pnl = self.starting_cash + sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
+        self.portfolio_pnl = sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
 
         self.portfolio_pnl_gauge.set(self.portfolio_pnl)
 

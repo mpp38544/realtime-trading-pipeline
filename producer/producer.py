@@ -7,6 +7,7 @@ import json
 import psycopg2
 from datetime import datetime, timezone
 from prometheus_client import Counter, start_http_server
+import time
 
 load_dotenv()
 
@@ -64,14 +65,18 @@ class TradingProducer:
         self.data_stream.subscribe_trades(self.trade_callback, *self.symbols)
 
     def start(self):
-        self.data_stream.run()
+        while True:
+            try:
+                self.data_stream.run()
+            except Exception as e:
+                print(f"Alpaca stream error: {e}, reconnecting...")
+                time.sleep(5)
+                self.data_stream = CryptoDataStream(api_key = self.ALPACA_API_KEY, secret_key=self.ALPACA_SECRET_KEY)
+
+                self.subscribe_trades()
 
     def stop(self):
         self.data_stream.stop()
-
-
-
-
 
 if __name__ == "__main__":
     producer = TradingProducer()
