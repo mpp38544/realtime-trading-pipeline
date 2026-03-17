@@ -79,10 +79,15 @@ class OrderExecutor:
             self.inv[symbol] -= size
             self.cash_bal[symbol] += (val * size)
     
-        self.unrealised_pnl[symbol] = self.inv[symbol] * price
-        self.realised_pnl[symbol] = self.cash_bal[symbol]
+        self.unrealised_pnl[symbol] = self.cash_bal[symbol] + self.inv[symbol] * price
+        
+        if abs(self.inv[symbol] < 1e-9):
+            self.realised_pnl[symbol] += self.cash_bal[symbol]
+            self.cash_bal[symbol] = 0.0
+            self.inv[symbol] = 0.0
 
-        self.portfolio_pnl = sum(self.inv[s] * price + self.cash_bal[s] for s in self.inv)
+
+        self.portfolio_pnl = sum(self.unrealised_pnl[symbol] + self.realised_pnl[symbol] for s in self.inv)
 
         self.portfolio_pnl_gauge.set(self.portfolio_pnl)
 
