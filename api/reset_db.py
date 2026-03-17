@@ -11,17 +11,7 @@ connection = psycopg2.connect(
 print("Connected")
 
 cursor = connection.cursor()
-print("Truncating trades...")
-cursor.execute("TRUNCATE TABLE trades CASCADE")
-print("Truncating positions...")
-cursor.execute("TRUNCATE TABLE positions CASCADE")
-print("Truncating pnl...")
-cursor.execute("TRUNCATE TABLE pnl CASCADE")
-print("Truncating logs...")
-cursor.execute("TRUNCATE TABLE logs CASCADE")
-print("Truncating state...")
-cursor.execute("TRUNCATE TABLE state CASCADE")
-print("Committing...")
+cursor.execute("TRUNCATE TABLE trades, positions, pnl, logs, state CASCADE")
 connection.commit()
 print("Done")
 
