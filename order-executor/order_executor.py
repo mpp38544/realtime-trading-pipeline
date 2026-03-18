@@ -81,13 +81,13 @@ class OrderExecutor:
     
         self.unrealised_pnl[symbol] = self.cash_bal[symbol] + self.inv[symbol] * price
         
-        if abs(self.inv[symbol] < 1e-9):
+        if abs(self.inv[symbol]) < 1e-9:
             self.realised_pnl[symbol] += self.cash_bal[symbol]
             self.cash_bal[symbol] = 0.0
             self.inv[symbol] = 0.0
 
 
-        self.portfolio_pnl = sum(self.unrealised_pnl[symbol] + self.realised_pnl[symbol] for s in self.inv)
+        self.portfolio_pnl = sum(self.unrealised_pnl[s] + self.realised_pnl[s] for s in self.inv)
 
         self.portfolio_pnl_gauge.set(self.portfolio_pnl)
 
