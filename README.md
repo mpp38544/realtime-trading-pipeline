@@ -169,7 +169,9 @@ realtime-trading-pipeline/
 The Producer connects to Alpaca's WebSocket API and subscribes to live trade events for a configurable list of crypto pairs. Each incoming tick is serialised to JSON and published to the `raw-ticks` Kafka topic.
 
 ### 2. Signal Processing
-The Signal Processor maintains independent state per symbol — a Kalman Filter and Avellaneda-Stoikov model instance for each tracked asset. For each incoming tick it:
+The Signal Processor maintains independent state per symbol — a Kalman Filter and Avellaneda-Stoikov model instance for each tracked asset. 
+
+For each incoming tick it:
 - Seeds the Kalman Filter with the raw price to estimate a smoothed fair value
 - Calculates short-term volatility using an EWMA on log returns
 - Feeds fair price, volatility, current inventory and time remaining into the A-S model to compute optimal bid/ask quotes
