@@ -36,7 +36,6 @@ Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filt
 - confluent-kafka, numpy, psycopg2, alpaca-py
 
 ## Architecture
-## Architecture
 
 ```
 Alpaca WebSocket API
