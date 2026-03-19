@@ -36,7 +36,6 @@ Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filt
 - confluent-kafka, numpy, psycopg2, alpaca-py
 
 ## Architecture
-## Architecture
 
 ```
 Alpaca WebSocket API
@@ -165,7 +164,7 @@ realtime-trading-pipeline/
 
 ## How It Works
 
-### 1. Data Ingestion
+### 1. Data Reception
 The Producer connects to Alpaca's WebSocket API and subscribes to live trade events for a configurable list of crypto pairs. Each incoming tick is serialised to JSON and published to the `raw-ticks` Kafka topic.
 
 ### 2. Signal Processing
