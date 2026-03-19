@@ -3,7 +3,7 @@
 ## Overview
 Trading Pipeline that uses real-time Alpaca data to simulate crypto trades for customisable tickers using the Avellaneda Stoikov Model. Includes a dashboard featuring trade activity, key metrics and charts. 
 
-Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted to PostgreSQL via FastAPI REST API and React dashboard. Entire stack runs in Docker Compose.
+Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted in PostgreSQL via a FastAPI REST API and React dashboard. Entire stack runs in Docker Compose.
 
 ## Tech Stack
 
@@ -179,7 +179,7 @@ The Signal Processor maintains independent state per symbol — a Kalman Filter 
 The Order Executor consumes signals and simulates fills at the quoted price, updating per-symbol inventory and cash balance. Every fill is persisted to PostgreSQL across three tables — `trades`, `positions`, and `pnl` — with portfolio PnL calculated as the sum of unrealised and realised PnL across all symbols.
 
 ### 4. API Layer
-FastAPI exposes seven REST endpoints serving live trading data from PostgreSQL. The `/metrics` endpoint computes Sharpe ratio and max drawdown on the fly from the full PnL history.
+FastAPI exposes several REST endpoints serving live trading data from PostgreSQL. The `/metrics` endpoint computes Sharpe ratio and max drawdown on the fly from the full PnL history.
 
 ### 5. Dashboard
 The React dashboard polls all endpoints every 5 seconds and renders:
@@ -190,7 +190,7 @@ The React dashboard polls all endpoints every 5 seconds and renders:
 - **Drawdown Chart** — drawdown percentage over time
 - **Position Bar Chart** — per-symbol total value
 - **Positions Table** — current inventory and cash per symbol
-- **Trades Feed** — most recent 5 trade executions
+- **Trades Feed** — most recent trade executions
 
 ## Dashboard
 ![Dashboard Screenshot](assets/dashboard.png)
