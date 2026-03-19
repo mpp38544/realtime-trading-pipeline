@@ -183,7 +183,7 @@ The Order Executor consumes signals and simulates fills at the quoted price, upd
 FastAPI exposes several REST endpoints serving live trading data from PostgreSQL. The `/metrics` endpoint computes Sharpe ratio and max drawdown on the fly from the full PnL history.
 
 ### 5. Dashboard
-The React dashboard polls all endpoints every 5 seconds and renders:
+The React dashboard polls endpoints every 5 seconds and renders:
 - **Portfolio PnL** — current total account value
 - **Sharpe Ratio** — risk-adjusted return
 - **Max Drawdown** — largest peak-to-trough decline
