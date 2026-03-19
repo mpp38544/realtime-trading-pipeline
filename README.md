@@ -66,7 +66,7 @@ Avellaneda-Stoikov
   All services monitored by Prometheus + Grafana
 ```
 
-Each service runs as an independent Docker container communicating exclusively through Kafka topics and the PostgreSQL database. The Producer ingests live tick data from Alpaca and publishes to the `raw-ticks` topic. The Signal Processor consumes ticks, runs them through a Kalman Filter to estimate fair price, then applies the Avellaneda-Stoikov model to generate optimal bid/ask quotes and publishes signals to `trading-signals`. The Order Executor simulates fills and persists all trades, positions and PnL to PostgreSQL. FastAPI exposes this data via REST endpoints consumed by the React dashboard.
+Each service runs as a Docker container communicating through Kafka topics and the PostgreSQL database. The Producer ingests live tick data from Alpaca and publishes to the `raw-ticks` topic. The Signal Processor consumes ticks, runs them through a Kalman Filter to estimate fair price, then applies the Avellaneda-Stoikov model to generate optimal bid/ask quotes and publishes signals to `trading-signals`. The Order Executor simulates fills and persists all trades, positions and PnL to PostgreSQL. FastAPI exposes this data via REST endpoints consumed by the React dashboard.
 
 ## Getting Started
 ### Prerequisites:
