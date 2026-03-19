@@ -3,7 +3,7 @@
 ## Overview
 Trading Pipeline that uses real-time Alpaca data to simulate crypto trades for customisable tickers using the Avellaneda Stoikov Model. Includes a dashboard featuring trade activity, key metrics and charts. 
 
-Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted to PostgreSQL via FastAPI REST API and React dashboard. Entire stack runs in Docker Compose.
+Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted in PostgreSQL via a FastAPI REST API and React dashboard. Entire stack runs in Docker Compose.
 
 ## Tech Stack
 
@@ -36,7 +36,6 @@ Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filt
 - confluent-kafka, numpy, psycopg2, alpaca-py
 
 ## Architecture
-## Architecture
 
 ```
 Alpaca WebSocket API
@@ -64,10 +63,10 @@ Avellaneda-Stoikov
         ↓
   React Dashboard
   
-  All services monitored by Prometheus + Grafana
+  Services monitored by Prometheus + Grafana
 ```
 
-Each service runs as an independent Docker container communicating exclusively through Kafka topics and the PostgreSQL database. The Producer ingests live tick data from Alpaca and publishes to the `raw-ticks` topic. The Signal Processor consumes ticks, runs them through a Kalman Filter to estimate fair price, then applies the Avellaneda-Stoikov model to generate optimal bid/ask quotes and publishes signals to `trading-signals`. The Order Executor simulates fills and persists all trades, positions and PnL to PostgreSQL. FastAPI exposes this data via REST endpoints consumed by the React dashboard.
+Each service runs as a Docker container communicating through Kafka topics and the PostgreSQL database. The Producer ingests live tick data from Alpaca and publishes to the `raw-ticks` topic. The Signal Processor consumes ticks, runs them through a Kalman Filter to estimate fair price, then applies the Avellaneda-Stoikov model to generate optimal bid/ask quotes and publishes signals to `trading-signals`. The Order Executor simulates fills and persists all trades, positions and PnL to PostgreSQL. FastAPI exposes this data via REST endpoints consumed by the React dashboard.
 
 ## Getting Started
 ### Prerequisites:
@@ -165,11 +164,13 @@ realtime-trading-pipeline/
 
 ## How It Works
 
-### 1. Data Ingestion
+### 1. Data Reception
 The Producer connects to Alpaca's WebSocket API and subscribes to live trade events for a configurable list of crypto pairs. Each incoming tick is serialised to JSON and published to the `raw-ticks` Kafka topic.
 
 ### 2. Signal Processing
-The Signal Processor maintains independent state per symbol — a Kalman Filter and Avellaneda-Stoikov model instance for each tracked asset. For each incoming tick it:
+The Signal Processor maintains independent state per symbol — a Kalman Filter and Avellaneda-Stoikov model instance for each tracked asset. 
+
+For each incoming tick it:
 - Seeds the Kalman Filter with the raw price to estimate a smoothed fair value
 - Calculates short-term volatility using an EWMA on log returns
 - Feeds fair price, volatility, current inventory and time remaining into the A-S model to compute optimal bid/ask quotes
@@ -179,10 +180,10 @@ The Signal Processor maintains independent state per symbol — a Kalman Filter 
 The Order Executor consumes signals and simulates fills at the quoted price, updating per-symbol inventory and cash balance. Every fill is persisted to PostgreSQL across three tables — `trades`, `positions`, and `pnl` — with portfolio PnL calculated as the sum of unrealised and realised PnL across all symbols.
 
 ### 4. API Layer
-FastAPI exposes seven REST endpoints serving live trading data from PostgreSQL. The `/metrics` endpoint computes Sharpe ratio and max drawdown on the fly from the full PnL history.
+FastAPI exposes several REST endpoints serving live trading data from PostgreSQL. The `/metrics` endpoint computes Sharpe ratio and max drawdown on the fly from the full PnL history.
 
 ### 5. Dashboard
-The React dashboard polls all endpoints every 5 seconds and renders:
+The React dashboard polls endpoints every 5 seconds and renders:
 - **Portfolio PnL** — current total account value
 - **Sharpe Ratio** — risk-adjusted return
 - **Max Drawdown** — largest peak-to-trough decline
@@ -190,7 +191,7 @@ The React dashboard polls all endpoints every 5 seconds and renders:
 - **Drawdown Chart** — drawdown percentage over time
 - **Position Bar Chart** — per-symbol total value
 - **Positions Table** — current inventory and cash per symbol
-- **Trades Feed** — most recent 5 trade executions
+- **Trades Feed** — most recent trade executions
 
 ## Dashboard
 ![Dashboard Screenshot](assets/dashboard.png)
