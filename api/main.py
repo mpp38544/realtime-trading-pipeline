@@ -91,6 +91,33 @@ def get_portfolio():
     cols = ["realised", "unrealised", "portfolio_pnl", "timestamp"]
     return dict(zip(cols, row))
 
+@app.get("/summary")
+def get_summary():
+    conn = database.dbconn()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT DISTINCT ON (symbol) symbol, unrealised, realised, total, portfolio_pnl, timestamp
+        FROM pnl
+        ORDER BY symbol, timestamp DESC
+    """)
+    
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    if not rows:
+        return {"portfolio_pnl": 0, "unrealised": 0, "realised": 0}
+    
+    total_unrealised = sum(row[1] for row in rows)
+    total_realised = sum(row[2] for row in rows)
+    portfolio_pnl = total_unrealised + total_realised
+    
+    return {
+        "portfolio_pnl": round(portfolio_pnl, 2),
+        "unrealised": round(total_unrealised, 2),
+        "realised": round(total_realised, 2)
+    }
 
 @app.get("/health")
 def get_health():

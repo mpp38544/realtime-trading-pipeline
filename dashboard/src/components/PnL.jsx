@@ -2,28 +2,28 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 function PnL() {
-    const [portfolio, setPortfolio] = useState(null)
+    const [summar, setSummary] = useState(null)
 
     useEffect(() => {
-        const fetchPortfolio = async () => {
+        const fetchSummary = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL}/portfolio`)
-                setPortfolio(response.data)
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/summary`)
+                setSummary(response.data)
             } catch (error) {
                 console.error("Fetch error:", error)
             }
         }
 
-        fetchPortfolio()
-        const interval = setInterval(fetchPortfolio, 5000)
+        fetchSummary()
+        const interval = setInterval(fetchSummary, 5000)
         return () => clearInterval(interval)
     }, [])
 
     return (
         <div>
-            <h3 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${portfolio ? portfolio.portfolio_pnl.toFixed(2) : "Loading..."}</h3>
-            <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${portfolio ? portfolio.unrealised.toFixed(2) : "Loading..."}</h3>
-            <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${portfolio ? portfolio.realised.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${summary ? summary.portfolio_pnl.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${portfolio ? summary.unrealised.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${portfolio ? summary.realised.toFixed(2) : "Loading..."}</h3>
         </div>
     )
 }
