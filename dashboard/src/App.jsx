@@ -22,7 +22,6 @@ function App() {
         width: '100%',
         padding: '20px',
         color: 'white',
-        fontFamily: 'monospace',
         boxSizing: 'border-box',
         overflowY: 'hidden'
     }}>
