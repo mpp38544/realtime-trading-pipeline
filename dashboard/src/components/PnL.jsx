@@ -22,8 +22,8 @@ function PnL() {
     return (
         <div>
             <h3 style={{ fontWeight: 'normal' }}>Portfolio PnL: ${summary ? summary.portfolio_pnl.toFixed(2) : "Loading..."}</h3>
-            <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${portfolio ? summary.unrealised.toFixed(2) : "Loading..."}</h3>
-            <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${portfolio ? summary.realised.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Unrealised PnL: ${summary ? summary.unrealised.toFixed(2) : "Loading..."}</h3>
+            <h3 style={{ fontWeight: 'normal' }}>Realised PnL: ${summary ? summary.realised.toFixed(2) : "Loading..."}</h3>
         </div>
     )
 }
