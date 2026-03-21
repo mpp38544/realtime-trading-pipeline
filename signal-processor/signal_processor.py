@@ -97,10 +97,34 @@ class SignalProcessor:
             user="trader",
             password="trader123"
         )
-
+        
         self.cursor = self.conn.cursor()
 
+        self.load_state()
+
+
         start_http_server(8002)
+
+    def load_state(self):
+        self.cursor.execute(
+            "SELECT symbol, inventory FROM state"
+        )
+        rows = self.cursor.fetchall()
+        
+        if not rows:
+            print("No saved state — starting fresh")
+            return
+        
+        for row in rows:
+            symbol = row[0]
+            if symbol not in self.inv:
+                self.kF[symbol] = KalmanFilter()
+                self.aS[symbol] = AvellanedaStoikov()
+                self.lastPrice[symbol] = 0.0
+                self.currentVol[symbol] = 1e-4
+            self.inv[symbol] = row[1]
+        
+        print(f"Loaded inventory for {len(rows)} symbols")
 
     def calc_vol(self, symbol, price):
         if self.lastPrice[symbol] <= 0.0:
@@ -178,8 +202,8 @@ class SignalProcessor:
             signals.append(trade_sig)
 
         elif self.inv[symbol] < -self.aS[symbol].max_pos * 0.8:
-            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": price, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
-            
+            rebalance_size = abs(self.inv[symbol])
+            trade_sig = {"symbol": symbol, "side": "BUY", "price": price, "val": price, "fair_price": fair_price, "size": rebalance_size, "inventory": self.inv[symbol], "timestamp": timestamp}
             signals.append(trade_sig)
 
         #SELL
@@ -191,8 +215,8 @@ class SignalProcessor:
             signals.append(trade_sig)
 
         elif self.inv[symbol] > self.aS[symbol].max_pos * 0.8:
-            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": price, "fair_price": fair_price, "size": size, "inventory": self.inv[symbol], "timestamp" : timestamp}
-
+            rebalance_size = abs(self.inv[symbol])
+            trade_sig = {"symbol": symbol, "side": "SELL", "price": price, "val": price, "fair_price": fair_price, "size": rebalance_size, "inventory": self.inv[symbol], "timestamp": timestamp}
             signals.append(trade_sig)
         
         for sig in signals:

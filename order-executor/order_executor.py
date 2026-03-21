@@ -71,6 +71,15 @@ class OrderExecutor:
             self.realised_pnl[symbol] = 0.0
             self.unrealised_pnl[symbol] = 0.0
 
+        # reject trade if it would push cash too negative
+        if side == "BUY" and self.cash_bal[symbol] - (val * size) < -500:
+            print(f"Rejecting BUY for {symbol} — would breach cash floor")
+            return
+
+        if side == "SELL" and self.inv[symbol] - size < -0.01:
+            print(f"Rejecting SELL for {symbol} — would breach position limit")
+            return
+
         if side == "BUY":
             self.inv[symbol] += size
             self.cash_bal[symbol] -= (val * size)
@@ -85,6 +94,18 @@ class OrderExecutor:
             self.realised_pnl[symbol] += self.cash_bal[symbol]
             self.cash_bal[symbol] = 0.0
             self.inv[symbol] = 0.0
+
+        if self.cash_bal[symbol] < -500:
+            print(f"WARNING: Cash floor breached for {symbol} — force flattening position")
+            flatten_size = abs(self.inv[symbol])
+            if self.inv[symbol] > 0:
+                # long position, force sell
+                self.cash_bal[symbol] += price * flatten_size
+                self.inv[symbol] = 0.0
+            elif self.inv[symbol] < 0:
+                # short position, force buy
+                self.cash_bal[symbol] -= price * flatten_size
+                self.inv[symbol] = 0.0
 
 
         self.portfolio_pnl = sum(self.unrealised_pnl[s] + self.realised_pnl[s] for s in self.inv)
