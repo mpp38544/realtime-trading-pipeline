@@ -2,13 +2,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    font-weight: 100;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 100 !important;
 }
 
 html, body, #root {
     width: 100%;
     min-height: 100vh;
     background-color: #0f0f0f;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
