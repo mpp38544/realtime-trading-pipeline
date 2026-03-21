@@ -34,7 +34,7 @@ function App() {
         gap: '20px', overflowY: 'hidden' 
       }}>
         <div style={{ flex: 1 }}>
-          <h1 style={{marginTop: isMobile ? '10px': '30px'}}><strong>Trading Dashboard (Avellaneda-Stoikov Model)</strong></h1>
+          <h1 style={{marginTop: isMobile ? '10px': '30px' }}><strong>Trading Dashboard (Avellaneda-Stoikov Model)</strong></h1>
         </div>
         <div style={{ flex: 1, marginTop: isMobile ? '10px' : '20px' }}>
             <div style={{ display: 'flex', gap: '20px'}}>

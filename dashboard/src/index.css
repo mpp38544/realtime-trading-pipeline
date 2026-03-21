@@ -8,4 +8,5 @@ html, body, #root {
     width: 100%;
     min-height: 100vh;
     background-color: #0f0f0f;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
