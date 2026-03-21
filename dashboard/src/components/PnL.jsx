@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 function PnL() {
-    const [summar, setSummary] = useState(null)
+    const [summary, setSummary] = useState(null)
 
     useEffect(() => {
         const fetchSummary = async () => {
