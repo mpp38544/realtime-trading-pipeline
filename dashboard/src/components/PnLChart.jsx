@@ -27,7 +27,15 @@ return (
         <ResponsiveContainer width="100%" height={300}>
             <LineChart width={800} height={300} data={pnl}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="timestamp" tickFormatter={(t) => new Date(t).toLocaleTimeString()} />
+            <XAxis 
+                dataKey="timestamp" 
+                tickFormatter={(t) => {
+                    const date = new Date(t)
+                    return `${date.getMonth()+1}/${date.getDate()}`
+                }}
+                tick={{ fontSize: 11 }}
+                interval="preserveStartEnd"
+            />
             <YAxis />
             <Tooltip />
             <Line type="monotone" dataKey="portfolio_pnl" stroke="#00ff88" dot={false} />
