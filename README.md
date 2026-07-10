@@ -3,7 +3,7 @@
 ## Overview
 Trading Pipeline that uses real-time Alpaca data to simulate crypto trades for customisable tickers using the Avellaneda Stoikov Model. Includes a dashboard featuring trade activity, key metrics and charts. 
 
-Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted in PostgreSQL via a FastAPI REST API and React dashboard. Entire stack runs in Docker Compose.
+Uses Alpaca's Websockeet API and Kafka for message processing. Each tick is filtered through a Kalman Filter for fair price estimation, and then fed into AS model for optimal bid/ask quotes. Order execution is assumed to be guaranteed, and persisted in PostgreSQL via a FastAPI REST API and React dashboard. Entire stack runs in Docker Compose, including the API and dashboard.
 
 ## Tech Stack
 
@@ -68,6 +68,8 @@ Avellaneda-Stoikov
 
 Each service runs as a Docker container communicating through Kafka topics and the PostgreSQL database. The Producer ingests live tick data from Alpaca and publishes to the `raw-ticks` topic. The Signal Processor consumes ticks, runs them through a Kalman Filter to estimate fair price, then applies the Avellaneda-Stoikov model to generate optimal bid/ask quotes and publishes signals to `trading-signals`. The Order Executor simulates fills and persists all trades, positions and PnL to PostgreSQL. FastAPI exposes this data via REST endpoints consumed by the React dashboard.
 
+The Postgres data volume is persistent, so the database is not re-initialised every time the containers start. The tables are created automatically if they do not already exist, and you only need to reset data manually when you want a clean slate.
+
 ## Getting Started
 ### Prerequisites:
 - Docker Desktop
@@ -109,19 +111,18 @@ npm install
 docker compose up --build -d
 ```
 
-### 6. Start the Dashboard
-```bash
-cd dashboard
-npm run dev
-```
+This starts Kafka, PostgreSQL, the producer, signal processor, order executor, API, and dashboard containers.
 
-### 7. Access Services
+### 6. Access Services
 | Service         | URL                        |
 |-----------------|----------------------------|
 | React Dashboard | http://localhost:5174      |
 | FastAPI docs    | http://localhost:8000/docs |
 | Grafana         | http://localhost:3000      |
 | Prometheus      | http://localhost:9090      |
+
+### 7. Reset Data Only When Needed
+Because the database uses the `postgres-data` Docker volume, trading data survives container restarts. Use the reset helper only when you explicitly want to clear the tables.
 
 
 ## Project Structure
@@ -137,8 +138,8 @@ realtime-trading-pipeline/
 │   └── Dockerfile
 ├── order-executor/
 │   ├── order_executor.py    # Simulated order fills + PostgreSQL writes
-│   ├── init_db.py           # Database schema initialisation
-│   ├── reset_db.py          # Clears all trading data
+│   ├── init_db.py           # Manual schema initialisation helper
+│   ├── reset_db.py          # Manual data reset helper
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── api/

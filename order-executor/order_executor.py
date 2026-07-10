@@ -33,6 +33,9 @@ class OrderExecutor:
         self.portfolio_pnl = 0
 
         self.cursor = self.conn.cursor()
+
+        self.ensure_schema()
+
         self.load_state()
         start_http_server(8003)
 
@@ -55,6 +58,59 @@ class OrderExecutor:
             self.portfolio_pnl = row[5]
 
         print(f"Loaded state for {len(rows)} symbols")
+
+    def ensure_schema(self):
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS trades ("
+            "id SERIAL PRIMARY KEY,"
+            "symbol VARCHAR(20),"
+            "side VARCHAR(20),"
+            "price FLOAT,"
+            "quantity FLOAT,"
+            "timestamp TIMESTAMPTZ)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS positions ("
+            "id SERIAL PRIMARY KEY,"
+            "symbol VARCHAR(20),"
+            "inventory FLOAT,"
+            "cash_balance FLOAT,"
+            "timestamp TIMESTAMPTZ)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS pnl ("
+            "id SERIAL PRIMARY KEY,"
+            "symbol VARCHAR(20),"
+            "unrealised FLOAT,"
+            "realised FLOAT,"
+            "total FLOAT,"
+            "portfolio_pnl FLOAT,"
+            "timestamp TIMESTAMPTZ)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS logs ("
+            "id SERIAL PRIMARY KEY,"
+            "service VARCHAR(20),"
+            "message TEXT,"
+            "timestamp TIMESTAMPTZ)"
+        )
+
+        self.cursor.execute(
+            "CREATE TABLE IF NOT EXISTS state ("
+            "id SERIAL PRIMARY KEY,"
+            "symbol VARCHAR(20) UNIQUE,"
+            "inventory FLOAT,"
+            "cash_balance FLOAT,"
+            "unrealised FLOAT,"
+            "realised FLOAT,"
+            "portfolio_pnl FLOAT,"
+            "timestamp TIMESTAMPTZ)"
+        )
+
+        self.conn.commit()
     
     def execute_signal(self, sig):
 

@@ -28,6 +28,27 @@ services:
     networks:
       - trading-network
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-init
+    depends_on:
+      - kafka
+    command:
+      - bash
+      - -ec
+      - |
+        until kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1; do
+          echo "Waiting for Kafka to become ready..."
+          sleep 2
+        done
+
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic raw-ticks --partitions 1 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic trading-signals --partitions 1 --replication-factor 1
+        echo "Kafka topics are ready."
+    restart: "no"
+    networks:
+      - trading-network
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -63,13 +84,32 @@ services:
     networks:
       - trading-network
 
+  api:
+    build: ./api
+    container_name: api
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      PYTHONUNBUFFERED: 1
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    networks:
+      - trading-network
+    ports:
+      - "8000:8000"
+
   producer:
     restart: always
     build: ./producer
     container_name: producer
     depends_on:
-      - kafka
-      - postgres
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       ALPACA_API_KEY: ${ALPACA_API_KEY}
@@ -87,8 +127,12 @@ services:
     build: ./signal-processor
     container_name: signal-processor
     depends_on:
-      - kafka
-      - postgres
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -104,8 +148,12 @@ services:
     build: ./order-executor
     container_name: order-executor
     depends_on:
-      - kafka
-      - postgres
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -115,6 +163,19 @@ services:
       - trading-network
     ports:
       - "8003:8003"
+
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      VITE_API_URL: http://localhost:8000
+    networks:
+      - trading-network
+    ports:
+      - "5174:5174"
 
 networks:
   trading-network:
