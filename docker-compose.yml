@@ -25,27 +25,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - trading-network
-
-  kafka-init:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka-init
-    depends_on:
-      - kafka
-    command:
-      - bash
-      - -ec
-      - |
-        until kafka-topics --bootstrap-server kafka:29092 --list >/dev/null 2>&1; do
-          echo "Waiting for Kafka to become ready..."
-          sleep 2
-        done
-
-        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic raw-ticks --partitions 1 --replication-factor 1
-        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic trading-signals --partitions 1 --replication-factor 1
-        echo "Kafka topics are ready."
-    restart: "no"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     networks:
       - trading-network
 
@@ -108,8 +88,6 @@ services:
         condition: service_started
       postgres:
         condition: service_started
-      kafka-init:
-        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       ALPACA_API_KEY: ${ALPACA_API_KEY}
@@ -131,8 +109,6 @@ services:
         condition: service_started
       postgres:
         condition: service_started
-      kafka-init:
-        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -152,8 +128,6 @@ services:
         condition: service_started
       postgres:
         condition: service_started
-      kafka-init:
-        condition: service_completed_successfully
     environment:
       PYTHONUNBUFFERED: 1
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -171,7 +145,7 @@ services:
       api:
         condition: service_started
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: http://159.13.45.86:8000
     networks:
       - trading-network
     ports:
